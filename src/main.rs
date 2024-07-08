@@ -1,7 +1,7 @@
 use std::fmt;
 
-#[derive(Debug, Clone, Copy,PartialEq, PartialOrd)]
-enum SudokuCellValue {
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Hash)]
+enum SudokuCell {
     V0 = 0,
     V1 = 1,
     V2 = 2,
@@ -14,58 +14,58 @@ enum SudokuCellValue {
     V9 = 9,
 }
 
-impl fmt::Display for SudokuCellValue {
+impl fmt::Display for SudokuCell {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SudokuCellValue::V0 => write!(f, "0"),
-            SudokuCellValue::V1 => write!(f, "1"),
-            SudokuCellValue::V2 => write!(f, "2"),
-            SudokuCellValue::V3 => write!(f, "3"),
-            SudokuCellValue::V4 => write!(f, "4"),
-            SudokuCellValue::V5 => write!(f, "5"),
-            SudokuCellValue::V6 => write!(f, "6"),
-            SudokuCellValue::V7 => write!(f, "7"),
-            SudokuCellValue::V8 => write!(f, "8"),
-            SudokuCellValue::V9 => write!(f, "9"),
+            SudokuCell::V0 => write!(f, "0"),
+            SudokuCell::V1 => write!(f, "1"),
+            SudokuCell::V2 => write!(f, "2"),
+            SudokuCell::V3 => write!(f, "3"),
+            SudokuCell::V4 => write!(f, "4"),
+            SudokuCell::V5 => write!(f, "5"),
+            SudokuCell::V6 => write!(f, "6"),
+            SudokuCell::V7 => write!(f, "7"),
+            SudokuCell::V8 => write!(f, "8"),
+            SudokuCell::V9 => write!(f, "9"),
         }
     }
 }
 
-impl SudokuCellValue {
+impl SudokuCell {
     /// Converts to number
     fn value(&self) -> u8 {
         match self {
-            SudokuCellValue::V0 => 0,
-            SudokuCellValue::V1 => 1,
-            SudokuCellValue::V2 => 2,
-            SudokuCellValue::V3 => 3,
-            SudokuCellValue::V4 => 4,
-            SudokuCellValue::V5 => 5,
-            SudokuCellValue::V6 => 6,
-            SudokuCellValue::V7 => 7,
-            SudokuCellValue::V8 => 8,
-            SudokuCellValue::V9 => 9,
+            SudokuCell::V0 => 0,
+            SudokuCell::V1 => 1,
+            SudokuCell::V2 => 2,
+            SudokuCell::V3 => 3,
+            SudokuCell::V4 => 4,
+            SudokuCell::V5 => 5,
+            SudokuCell::V6 => 6,
+            SudokuCell::V7 => 7,
+            SudokuCell::V8 => 8,
+            SudokuCell::V9 => 9,
         }
     }
     /// Creates enum from value, None if not in valid range
-    fn from_value(value: u8) -> Option<SudokuCellValue> {
+    fn from_value(value: u8) -> Option<SudokuCell> {
         match value {
-            0 => Some(SudokuCellValue::V0),
-            1 => Some(SudokuCellValue::V1),
-            2 => Some(SudokuCellValue::V2),
-            3 => Some(SudokuCellValue::V3),
-            4 => Some(SudokuCellValue::V4),
-            5 => Some(SudokuCellValue::V5),
-            6 => Some(SudokuCellValue::V6),
-            7 => Some(SudokuCellValue::V7),
-            8 => Some(SudokuCellValue::V8),
-            9 => Some(SudokuCellValue::V9),
+            0 => Some(SudokuCell::V0),
+            1 => Some(SudokuCell::V1),
+            2 => Some(SudokuCell::V2),
+            3 => Some(SudokuCell::V3),
+            4 => Some(SudokuCell::V4),
+            5 => Some(SudokuCell::V5),
+            6 => Some(SudokuCell::V6),
+            7 => Some(SudokuCell::V7),
+            8 => Some(SudokuCell::V8),
+            9 => Some(SudokuCell::V9),
             _ => None,
         }
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Hash)]
 enum SudokuRow {
     R1,
     R2,
@@ -78,7 +78,7 @@ enum SudokuRow {
     R9,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Hash)]
 enum SudokuColumn {
     C1,
     C2,
@@ -90,11 +90,40 @@ enum SudokuColumn {
     C8,
     C9,
 }
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Hash)]
+enum FilledSudokuError {
+    Length(usize),
+    InvalidCharacter(char, usize),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Hash)]
+struct FilledSudoku {
+    values: [SudokuCell; 81],
+}
+impl FilledSudoku {
+    // Converts from string without formatting, does not check for validity
+    fn from_string(r: &str) -> Result<FilledSudoku, FilledSudokuError> {
+        let mut values = [SudokuCell::V0; 81];
+        let string_chars: Vec<char> = r.chars().collect();
+        if string_chars.len() != 81 {
+            return Err(FilledSudokuError::Length(string_chars.len()));
+        }
+        for (i, c) in string_chars.iter().enumerate() {
+            let n = c.to_digit(10);
+            if n.is_none() {
+                return Err(FilledSudokuError::InvalidCharacter(*c, i));
+            } else {
+                values[i] = SudokuCell::from_value(n.unwrap() as u8).unwrap();
+            }
+        }
+        Ok(FilledSudoku { values })
+    }
+}
 
 fn main() {
-    let sudoku1: SudokuCellValue = SudokuCellValue::V1;
+    let sudoku1: SudokuCell = SudokuCell::V1;
     sudoku1.value();
-    let my_value: SudokuCellValue = SudokuCellValue::from_value(3).unwrap();
+    let my_value: SudokuCell = SudokuCell::from_value(3).unwrap();
     println!("Sudoku1: {}", sudoku1);
     println!("Sudoku1 Debug: {:?}", sudoku1);
     println!("Sudoku3: {}", my_value);
@@ -102,16 +131,22 @@ fn main() {
 
 #[cfg(test)]
 mod test {
-    use super::SudokuCellValue;
+    use super::FilledSudoku;
+    use super::FilledSudokuError;
+    use super::SudokuCell;
     #[test]
     fn cell_values() {
-
-        // Enum to value 
-        let sudoku1: SudokuCellValue = SudokuCellValue::V1;
+        // Enum to value
+        let sudoku1: SudokuCell = SudokuCell::V1;
         assert_eq!(sudoku1.value(), 1_u8);
 
-        let sudoku3: SudokuCellValue = SudokuCellValue::from_value(3).unwrap();
-        assert_eq!(sudoku3, SudokuCellValue::V3);        
+        let sudoku3: SudokuCell = SudokuCell::from_value(3).unwrap();
+        assert_eq!(sudoku3, SudokuCell::V3);
         assert_eq!(sudoku3.value(), 3_u8);
+    }
+    #[test]
+    fn filled_sudoku() {
+        let broken_sudoku1 = FilledSudoku::from_string("r");
+        assert_eq!(broken_sudoku1, Err(FilledSudokuError::Length(1)));
     }
 }
